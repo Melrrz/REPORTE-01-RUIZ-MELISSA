@@ -1,4 +1,5 @@
 from math import prod
+from unicodedata import name
 from lifestore_file import lifestore_products, lifestore_sales, lifestore_searches
 
 '''lifestore_searches = [id_search, id product]
@@ -63,30 +64,29 @@ def get_menos_ventas_por_categorias(categorias, lifestore_sales):
     prod_vendidos_por_categorias = {}
     for category in categorias:
         prod_vendidos_por_categorias[category] = {'prod_id':[], 'ventas':[], 'ordenados_ventas':[], 'busquedas':[], 'ordenados_busquedas':[]}
+        contador_ventas = {}
+        contador_busquedas = {}
         for prod_id in categorias[category]:
+            contador_ventas[prod_id] = 0
+            prod_vendidos_por_categorias[category]['prod_id'].append(prod_id)
+            contador_busquedas[prod_id] = 0
             for sale in lifestore_sales:
                 if prod_id == sale[IDX_SALES_ID_PRODUCTO]:
-                    prod_vendidos_por_categorias[category]['prod_id'].append(prod_id)
+                    contador_ventas[prod_id] += 1
                     prod_vendidos_por_categorias[category]['ventas'].append(sale)
+                    break
             for search in lifestore_searches:
                 if prod_id == search[IDX_SEARCHES_ID_PRODUCT]:
+                    contador_busquedas[prod_id] += 1
                     prod_vendidos_por_categorias[category]['busquedas'].append(search)
-        ordenados_ventas = get_ordenar_productos(prod_vendidos_por_categorias[category]['ventas'], 5, False)
-        prod_vendidos_por_categorias[category]['ordenados_ventas'] = ordenados_ventas         
-        ordenados_menores_busquedas = get_ordenar_productos(prod_vendidos_por_categorias[category]['busquedas'], 5, False)
-        prod_vendidos_por_categorias[category]['ordenados_busquedas'] = ordenados_menores_busquedas         
+                    break
+        ordenados_ventas = sorted(contador_ventas.items(), key = lambda x:x[1], reverse = False)
+        prod_vendidos_por_categorias[category]['ordenados_ventas'] = ordenados_ventas
+        ordenados_menores_busquedas = sorted(contador_busquedas.items(), key = lambda x:x[1], reverse = False)
+        prod_vendidos_por_categorias[category]['ordenados_busquedas'] = ordenados_menores_busquedas
     return prod_vendidos_por_categorias
 
-
-
-
-def print_product(prod_id):
-    '''
-    todo: itearar en mi listado de productos para buscar el prod_id e imprimir el nombre del producto
-    '''
-    
-    print(prod_id)
-
+       
 def get_ordenar_productos(lifestore_sales, limit = 5, top = True,):
     '''
     Retorna una lista de tuplas con la cantidad ventas que tuvo cada id_product y los ordena descendente
@@ -125,30 +125,54 @@ def get_totales(lifestore_products, lifestore_sales):
 
 
 
+
+                
+
+def get_product_name():
+    '''
+    Itearar en mi listado de productos para buscar el prod_id e imprimir el nombre del producto
+    '''
+    nombre_productos = {}
+    for product in lifestore_products:
+        nombre_productos[product[IDX_PRODUCTS_ID]] = product[IDX_PRODUCTS_NAME]
+    return nombre_productos
+
+    
+
+        
+     
+   
+
 def print_reports():
     '''
     Imprime el reporte con las:
     Lista de requerimientos de Emtech - Escribirla despues
     ToDo: Acomodar reportes de manera clara y visible
     '''
+    nombres = get_product_name()
+
     mayores_ventas = get_ordenar_productos(lifestore_sales)
-    print(mayores_ventas)
+    print("Los productos con mayores ventas son: ", mayores_ventas)
     
     mayores_busquedas = get_ordenar_productos(lifestore_searches, 10, True)
-    print(mayores_busquedas)
+    print("Los productos con mayores búsquedas son: ", mayores_busquedas)
 
     categorias = get_productos_agrupar_por_categoria()
-    menos_ventas_por_categorias = get_menos_ventas_por_categorias(categorias, lifestore_sales)
     
-    print(menos_ventas_por_categorias)
-
     mejores_resenas = get_ordenar_por_resenas(lifestore_sales, limit = 5, top = True)
-    print(mejores_resenas)
+    print("Los productos con mejores reseñas son: ", mejores_resenas)
 
+    menores_ventas = get_menos_ventas_por_categorias(categorias, lifestore_sales)
+    for category in menores_ventas:
+        menores_ventas[category]['ordenados_ventas']
+        print(category)
+        for i in range(5):
+            if i < len(menores_ventas[category]['ordenados_ventas']):
+                product = menores_ventas[category]['ordenados_ventas'][i]
+                nombre = nombres[product[0]]
+                print(f"El producto '{nombre[:15]}' se vendió: {product[1]} veces")
 
-
-
-  
+            
 
 #[1, 1, 5, '24/07/2020', 0],
 if __name__ == "__main__":
