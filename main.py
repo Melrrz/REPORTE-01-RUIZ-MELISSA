@@ -115,41 +115,41 @@ def get_ordenar_por_resenas(lifestore_products, limit = 5, top = True):
     promedios_ordenados = sorted(resenas.items(), key = lambda x:x[1]['prom'], reverse = top)
     return promedios_ordenados[:limit]   
 
-def get_totales(lifestore_products, lifestore_sales):
+
+def get_totales(lifestore_sales, name_and_price_product):
     totales = {}
-    for product in lifestore_products:
-        for sale in lifestore_sales:
-            id_prod = product[IDX_PRODUCTS_ID]
-            if id_prod is not lifestore_sales:
-                totales[id_prod] = 0
-
-
-
-
-                
-
-def get_product_name():
+    for sale in lifestore_sales:
+        anio = sale[IDX_SALES_DATE].split('/')[2]
+        if anio not in totales:
+            totales[anio] = {'total_anual': 0, 'cuenta_ventas': 0, 'meses': {}}
+        mes = sale[IDX_SALES_DATE].split('/')[1]
+        if mes not in totales[anio]['meses']:
+            totales[anio]['meses'][mes] = {'total_mes': 0, 'cuenta_mes': 0} 
+        totales[anio]['cuenta_ventas'] +=1
+        totales[anio]['meses'][mes]['cuenta_mes'] += 1  
+        id_product = sale[IDX_SALES_ID_PRODUCTO]
+        totales[anio]['total_anual'] = totales[anio]['total_anual'] + name_and_price_product[id_product][1]
+        totales[anio]['meses'][mes]['total_mes'] += name_and_price_product[id_product][1]
+    return totales 
+      
+      
+def get_product_name_and_price():
     '''
-    Itearar en mi listado de productos para buscar el prod_id e imprimir el nombre del producto
+    Itearar en mi listado para retornar un diccionario que contiene el id_product junto con su nombre y precio
     '''
-    nombre_productos = {}
+    name_and_price_product = {}
     for product in lifestore_products:
-        nombre_productos[product[IDX_PRODUCTS_ID]] = product[IDX_PRODUCTS_NAME]
-    return nombre_productos
-
-    
-
-        
+        name_and_price_product[product[IDX_PRODUCTS_ID]] = (product[IDX_PRODUCTS_NAME], product[IDX_PRODUCTS_PRICE])
+    return name_and_price_product
+      
      
-   
-
 def print_reports():
     '''
     Imprime el reporte con las:
     Lista de requerimientos de Emtech - Escribirla despues
     ToDo: Acomodar reportes de manera clara y visible
     '''
-    nombres = get_product_name()
+    nombres = get_product_name_and_price()
 
     mayores_ventas = get_ordenar_productos(lifestore_sales)
     print("Los productos con mayores ventas son: ", mayores_ventas)
@@ -163,6 +163,7 @@ def print_reports():
     print("Los productos con mejores reseñas son: ", mejores_resenas)
 
     menores_ventas = get_menos_ventas_por_categorias(categorias, lifestore_sales)
+    print('LOS PRODUCTOS CON MENORES VENTAS SON:')
     for category in menores_ventas:
         menores_ventas[category]['ordenados_ventas']
         print(category)
@@ -170,12 +171,20 @@ def print_reports():
             if i < len(menores_ventas[category]['ordenados_ventas']):
                 product = menores_ventas[category]['ordenados_ventas'][i]
                 nombre = nombres[product[0]]
-                print(f"El producto '{nombre[:15]}' se vendió: {product[1]} veces")
+                print(f"El producto '{nombre[0][:15]}' se vendió: {product[1]} veces")
+    
+    totales = get_totales(lifestore_sales, nombres)
+    for anio in totales:
+        print(f" En {anio} el ingreso total fue {totales[anio]['total_anual']}")
+    
+    
 
-            
+         
 
 #[1, 1, 5, '24/07/2020', 0],
 if __name__ == "__main__":
+    print_reports() 
+    exit()
     mensaje_bienvenida = 'Bienvenidx al sistema\nAccede con tus credenciales'
     print(mensaje_bienvenida)
     oportunidad = 0
