@@ -241,6 +241,8 @@ def print_reports():
 
 #[1, 1, 5, '24/07/2020', 0],
 if __name__ == "__main__":
+    print_reports() 
+    exit()
     mensaje_bienvenida = 'Bienvenidx al sistema\nAccede con tus credenciales'
     print(mensaje_bienvenida)
     oportunidad = 0
