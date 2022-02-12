@@ -71,7 +71,8 @@ def get_menos_ventas_por_categorias(categorias, lifestore_sales):
             prod_vendidos_por_categorias[category]['prod_id'].append(prod_id)
             contador_busquedas[prod_id] = 0
             for sale in lifestore_sales:
-                if prod_id == sale[IDX_SALES_ID_PRODUCTO]:
+                devolucion = sale[IDX_SALES_REFUND]
+                if devolucion == 0 and prod_id == sale[IDX_SALES_ID_PRODUCTO]:
                     contador_ventas[prod_id] += 1
                     prod_vendidos_por_categorias[category]['ventas'].append(sale)
                     break
@@ -100,23 +101,33 @@ def get_ordenar_productos(lifestore_sales, limit = 5, top = True,):
     productos_ordenados = sorted(productos.items(), key = lambda x:x[1], reverse = top)   
     return productos_ordenados[:limit]
 
-def get_ordenar_por_resenas(lifestore_products, limit = 5, top = True):
-    #To Do -> Averiguar que pedo con tomar en cuenta productos con devolución
+def get_ordenar_por_resenas(limit = 5, top = True):
+    '''
+    Retorna un diccionario con el score acumulado, cuenta y promedio los 5 productos con las mejores o peores reseñas
+    '''
     resenas = {}
     for sale in lifestore_sales:
         prod_id = sale[IDX_SALES_ID_PRODUCTO]
+        if sale[IDX_SALES_REFUND] == 1:
+            score = 1
+        else:
+            score = sale[IDX_SALES_SCORE]
         if prod_id not in resenas.keys():
             resenas[prod_id] = {'score_acumulado':0,'cuenta':0}
-        resenas[prod_id]['score_acumulado'] = resenas[prod_id]['score_acumulado'] + sale[IDX_SALES_SCORE]
+        resenas[prod_id]['score_acumulado'] = resenas[prod_id]['score_acumulado'] + score
         resenas[prod_id]['cuenta'] = resenas[prod_id]['cuenta'] + 1 
     for prod_id in resenas:
         prom = resenas[prod_id]['score_acumulado'] / resenas[prod_id]['cuenta'] 
         resenas[prod_id]['prom'] = prom
     promedios_ordenados = sorted(resenas.items(), key = lambda x:x[1]['prom'], reverse = top)
     return promedios_ordenados[:limit]   
+        
 
 
 def get_totales(lifestore_sales, name_and_price_product):
+    '''
+    Retorna un diccionario con las ventas e ingresos totales por año y por mes
+    '''
     totales = {}
     for sale in lifestore_sales:
         anio = sale[IDX_SALES_DATE].split('/')[2]
@@ -125,11 +136,13 @@ def get_totales(lifestore_sales, name_and_price_product):
         mes = sale[IDX_SALES_DATE].split('/')[1]
         if mes not in totales[anio]['meses']:
             totales[anio]['meses'][mes] = {'total_mes': 0, 'cuenta_mes': 0} 
-        totales[anio]['cuenta_ventas'] +=1
-        totales[anio]['meses'][mes]['cuenta_mes'] += 1  
-        id_product = sale[IDX_SALES_ID_PRODUCTO]
-        totales[anio]['total_anual'] = totales[anio]['total_anual'] + name_and_price_product[id_product][1]
-        totales[anio]['meses'][mes]['total_mes'] += name_and_price_product[id_product][1]
+        devolucion = sale[IDX_SALES_REFUND]
+        if devolucion == 0:     
+            totales[anio]['cuenta_ventas'] +=1
+            totales[anio]['meses'][mes]['cuenta_mes'] += 1  
+            id_product = sale[IDX_SALES_ID_PRODUCTO]
+            totales[anio]['total_anual'] = totales[anio]['total_anual'] + name_and_price_product[id_product][1]
+            totales[anio]['meses'][mes]['total_mes'] += name_and_price_product[id_product][1]
     return totales 
       
       
@@ -152,21 +165,32 @@ def print_reports():
     nombres = get_product_name_and_price()
 
     mayores_ventas = get_ordenar_productos(lifestore_sales)
-    print("Los productos con mayores ventas son: ", mayores_ventas)
-    
+    print("\n\nLOS PRODUCTOS CON MAYORES VENTAS SON:")
+    for venta in mayores_ventas:
+        print(nombres[venta[0]][0][:30]) 
+        
     mayores_busquedas = get_ordenar_productos(lifestore_searches, 10, True)
-    print("Los productos con mayores búsquedas son: ", mayores_busquedas)
-
+    print("\n\nLOS PRODUCTOS CON MAYORES BÚSQUEDAS SON:")
+    for busqueda in mayores_busquedas:
+        print(nombres[busqueda[0]][0][:30]) 
+        
     categorias = get_productos_agrupar_por_categoria()
     
-    mejores_resenas = get_ordenar_por_resenas(lifestore_sales, limit = 5, top = True)
-    print("Los productos con mejores reseñas son: ", mejores_resenas)
+    mejores_resenas = get_ordenar_por_resenas(limit = 5, top = True)
+    print("\n\nLOS PRODUCTOS CON MEJORES RESEÑAS SON: ")
+    for producto in mejores_resenas:
+        print(nombres[producto[0]][0][:30])
+
+    peores_resenas = get_ordenar_por_resenas(limit = 5, top = False)
+    print("\n\nLOS PRODUCTOS CON PEORES RESEÑAS SON: ")
+    for producto in peores_resenas:
+        print(nombres[producto[0]][0][:30])
 
     menores_ventas = get_menos_ventas_por_categorias(categorias, lifestore_sales)
-    print('LOS PRODUCTOS CON MENORES VENTAS SON:')
+    print('\n\nLOS PRODUCTOS CON MENORES VENTAS POR CATEGORÍA SON:')
     for category in menores_ventas:
         menores_ventas[category]['ordenados_ventas']
-        print(category)
+        print(f"\n*** {category} ***")
         for i in range(5):
             if i < len(menores_ventas[category]['ordenados_ventas']):
                 product = menores_ventas[category]['ordenados_ventas'][i]
@@ -174,16 +198,28 @@ def print_reports():
                 print(f"El producto '{nombre[0][:15]}' se vendió: {product[1]} veces")
     
     totales = get_totales(lifestore_sales, nombres)
+    meses_del_anio = {"01":'Enero', "02":'Febrero', "03":'Marzo', "04":'Abril', "05":'Mayo', "06":'Junio', "07":'Julio', 
+    "08":'Agosto', "09":'Septiembre', "10":'Octubre', "11":'Noviembre', "12":'Diciembre'}
+    print("\n\nINGRESOS TOTALES")
     for anio in totales:
-        print(f" En {anio} el ingreso total fue {totales[anio]['total_anual']}")
-    
-    
-
-         
+        print(f"\nEn {anio} el ingreso total fue: $ {totales[anio]['total_anual']}")
+        venta_anual = 0
+        for mes in meses_del_anio:
+            if mes in totales[anio]['meses']:
+                venta_anual = (venta_anual + totales[anio]['meses'][mes]['cuenta_mes'])
+                print(f"El ingreso total en {meses_del_anio[mes]} del {anio} fue: ${totales[anio]['meses'][mes]['total_mes']}")
+            else: 
+                print(f"\nEn {meses_del_anio[mes]} del {anio} no hubo ingresos")
+        print(f"\n\nLas ventas promedio mensuales del {anio} fueron: {(venta_anual/12):.2f}")
+        meses_con_mas_ventas = sorted(totales[anio]['meses'].items(), key = lambda x:x[1]['cuenta_mes'], reverse = True)
+        print("\n\nMESES CON MAYORES VENTAS")
+        for mes in meses_con_mas_ventas[0:4]:
+            print(f"El mes {meses_del_anio[mes[0]]} tuvo {mes[1]['cuenta_mes']} ventas")
+     
 
 #[1, 1, 5, '24/07/2020', 0],
 if __name__ == "__main__":
-    print_reports() 
+    print_reports()    
     exit()
     mensaje_bienvenida = 'Bienvenidx al sistema\nAccede con tus credenciales'
     print(mensaje_bienvenida)
