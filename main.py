@@ -224,8 +224,6 @@ def print_reports():
 
 #[1, 1, 5, '24/07/2020', 0],
 if __name__ == "__main__":
-    print_reports()    
-    exit()
     mensaje_bienvenida = 'Bienvenidx al sistema\nAccede con tus credenciales'
     print(mensaje_bienvenida)
     oportunidad = 0
@@ -234,7 +232,7 @@ if __name__ == "__main__":
         contrase = input('Contraseña: ')
         userloged = login(user, contrase)
         if userloged is not None:
-            print('Login Exitoso')
+            print('Login Exitoso, AQUI TIENES EL REPORTE DE LIFESTORE:')
             print_reports()    
             break
         else:
