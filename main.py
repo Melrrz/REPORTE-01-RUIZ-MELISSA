@@ -43,7 +43,7 @@ def get_productos_agrupar_por_categoria():
         categorias[categoria_prod].append(producto[IDX_PRODUCTS_ID])
     return categorias   
 
-def get_menos_ventas_por_categorias(categorias, lifestore_sales):
+def get_menos_ventas_y_busquedas_por_categorias(categorias, lifestore_sales):
     '''
     Relaciona las categorias de los productos con su id, ventas, busquedas y las ordena
     A partir de las categorias agrega: 
@@ -164,39 +164,54 @@ def print_reports():
     '''
     nombres = get_product_name_and_price()
 
+    print('\n *** PRIMERA PARTE: Productos más vendidos y productos rezagados ***')
     mayores_ventas = get_ordenar_productos(lifestore_sales)
-    print("\n\n*LOS PRODUCTOS CON MAYORES VENTAS SON:")
+    print("\n*LOS PRODUCTOS CON MAYORES VENTAS SON:")
     for venta in mayores_ventas:
         print(f"- id: {venta[0]}: {nombres[venta[0]][0][:30]}") 
         
     mayores_busquedas = get_ordenar_productos(lifestore_searches, 10, True)
-    print("\n\n*LOS PRODUCTOS CON MAYORES BÚSQUEDAS SON:")
+    print("\n*LOS PRODUCTOS CON MAYORES BÚSQUEDAS SON:")
     for busqueda in mayores_busquedas:
         print(f"- id: {busqueda[0]}: {nombres[busqueda[0]][0][:30]}") 
         
     categorias = get_productos_agrupar_por_categoria()
     
+    menores_ventas_y_busquedas = get_menos_ventas_y_busquedas_por_categorias(categorias, lifestore_sales)
+    print('\n*LOS PRODUCTOS CON MENORES VENTAS POR CATEGORÍA SON:')
+    for category in menores_ventas_y_busquedas:
+        menores_ventas_y_busquedas[category]['ordenados_ventas']
+        print(f"\n*** {category} ***")
+        for i in range(5):
+            if i < len(menores_ventas_y_busquedas[category]['ordenados_ventas']):
+                product = menores_ventas_y_busquedas[category]['ordenados_ventas'][i]
+                nombre = nombres[product[0]]
+                print(f"- El producto '{nombre[0][:15]}', se vendió: {product[1]} veces")
+    print('\n*LOS PRODUCTOS CON MENORES BUSQUEDAS POR CATEGORÍA SON:')
+    for category in menores_ventas_y_busquedas:
+        menores_ventas_y_busquedas[category]['ordenados_busquedas']
+        print(f"\n*** {category} ***")
+        for i in range(10):
+            if i < len(menores_ventas_y_busquedas[category]['ordenados_busquedas']):
+                product = menores_ventas_y_busquedas[category]['ordenados_busquedas'][i]
+                nombre = nombres[product[0]]
+                print(f"- El producto '{nombre[0][:15]}', se buscó: {product[1]} veces")
+
+
+    print('\n\n *** SEGUNDA PARTE: Productos por reseña en el servicio ***')
     mejores_resenas = get_ordenar_por_resenas(limit = 5, top = True)
     print("\n\n*LOS PRODUCTOS CON MEJORES RESEÑAS SON: ")
     for producto in mejores_resenas:
         print(f"- id: {producto[0]}: {nombres[producto[0]][0][:30]}")
 
     peores_resenas = get_ordenar_por_resenas(limit = 5, top = False)
-    print("\n\n*LOS PRODUCTOS CON PEORES RESEÑAS SON: ")
+    print("\n*LOS PRODUCTOS CON PEORES RESEÑAS SON: ")
     for producto in peores_resenas:
         print(f"id: {producto[0]}: {nombres[producto[0]][0][:30]}")
 
-    menores_ventas = get_menos_ventas_por_categorias(categorias, lifestore_sales)
-    print('\n\n*LOS PRODUCTOS CON MENORES VENTAS POR CATEGORÍA SON:')
-    for category in menores_ventas:
-        menores_ventas[category]['ordenados_ventas']
-        print(f"\n*** {category} ***")
-        for i in range(5):
-            if i < len(menores_ventas[category]['ordenados_ventas']):
-                product = menores_ventas[category]['ordenados_ventas'][i]
-                nombre = nombres[product[0]]
-                print(f"- El producto '{nombre[0][:15]}', se vendió: {product[1]} veces")
     
+    
+    print('\n\n *** TERCERA PARTE: Totales de ingresos y ventas promedio anuales y mensuales ***')    
     totales = get_totales(lifestore_sales, nombres)
     meses_del_anio = {"01":'Enero', "02":'Febrero', "03":'Marzo', "04":'Abril', "05":'Mayo', "06":'Junio', "07":'Julio', 
     "08":'Agosto', "09":'Septiembre', "10":'Octubre', "11":'Noviembre', "12":'Diciembre'}
@@ -232,7 +247,7 @@ if __name__ == "__main__":
         contrase = input('Contraseña: ')
         userloged = login(user, contrase)
         if userloged is not None:
-            print('Login Exitoso, AQUI TIENES EL REPORTE DE LIFESTORE:')
+            print('\nLogin Exitoso, AQUI TIENES EL REPORTE DE LIFESTORE:')
             print_reports()    
             break
         else:
