@@ -165,29 +165,29 @@ def print_reports():
     nombres = get_product_name_and_price()
 
     mayores_ventas = get_ordenar_productos(lifestore_sales)
-    print("\n\nLOS PRODUCTOS CON MAYORES VENTAS SON:")
+    print("\n\n*LOS PRODUCTOS CON MAYORES VENTAS SON:")
     for venta in mayores_ventas:
-        print(nombres[venta[0]][0][:30]) 
+        print(f"- id: {venta[0]}: {nombres[venta[0]][0][:30]}") 
         
     mayores_busquedas = get_ordenar_productos(lifestore_searches, 10, True)
-    print("\n\nLOS PRODUCTOS CON MAYORES BÚSQUEDAS SON:")
+    print("\n\n*LOS PRODUCTOS CON MAYORES BÚSQUEDAS SON:")
     for busqueda in mayores_busquedas:
-        print(nombres[busqueda[0]][0][:30]) 
+        print(f"- id: {busqueda[0]}: {nombres[busqueda[0]][0][:30]}") 
         
     categorias = get_productos_agrupar_por_categoria()
     
     mejores_resenas = get_ordenar_por_resenas(limit = 5, top = True)
-    print("\n\nLOS PRODUCTOS CON MEJORES RESEÑAS SON: ")
+    print("\n\n*LOS PRODUCTOS CON MEJORES RESEÑAS SON: ")
     for producto in mejores_resenas:
-        print(nombres[producto[0]][0][:30])
+        print(f"- id: {producto[0]}: {nombres[producto[0]][0][:30]}")
 
     peores_resenas = get_ordenar_por_resenas(limit = 5, top = False)
-    print("\n\nLOS PRODUCTOS CON PEORES RESEÑAS SON: ")
+    print("\n\n*LOS PRODUCTOS CON PEORES RESEÑAS SON: ")
     for producto in peores_resenas:
-        print(nombres[producto[0]][0][:30])
+        print(f"id: {producto[0]}: {nombres[producto[0]][0][:30]}")
 
     menores_ventas = get_menos_ventas_por_categorias(categorias, lifestore_sales)
-    print('\n\nLOS PRODUCTOS CON MENORES VENTAS POR CATEGORÍA SON:')
+    print('\n\n*LOS PRODUCTOS CON MENORES VENTAS POR CATEGORÍA SON:')
     for category in menores_ventas:
         menores_ventas[category]['ordenados_ventas']
         print(f"\n*** {category} ***")
@@ -195,26 +195,31 @@ def print_reports():
             if i < len(menores_ventas[category]['ordenados_ventas']):
                 product = menores_ventas[category]['ordenados_ventas'][i]
                 nombre = nombres[product[0]]
-                print(f"El producto '{nombre[0][:15]}' se vendió: {product[1]} veces")
+                print(f"- El producto '{nombre[0][:15]}', se vendió: {product[1]} veces")
     
     totales = get_totales(lifestore_sales, nombres)
     meses_del_anio = {"01":'Enero', "02":'Febrero', "03":'Marzo', "04":'Abril', "05":'Mayo', "06":'Junio', "07":'Julio', 
     "08":'Agosto', "09":'Septiembre', "10":'Octubre', "11":'Noviembre', "12":'Diciembre'}
-    print("\n\nINGRESOS TOTALES")
+    print("\n\n*INGRESOS TOTALES")
     for anio in totales:
-        print(f"\nEn {anio} el ingreso total fue: $ {totales[anio]['total_anual']}")
+        print(f"\n***EN {anio} EL INGRESO TOTAL FUE: $ {totales[anio]['total_anual']}***")
         venta_anual = 0
         for mes in meses_del_anio:
-            if mes in totales[anio]['meses']:
+            if mes in totales[anio]['meses'] and totales[anio]['meses'][mes]['total_mes'] != 0:
                 venta_anual = (venta_anual + totales[anio]['meses'][mes]['cuenta_mes'])
-                print(f"El ingreso total en {meses_del_anio[mes]} del {anio} fue: ${totales[anio]['meses'][mes]['total_mes']}")
+                print(f"- El ingreso total en {meses_del_anio[mes]} del {anio} fue: ${totales[anio]['meses'][mes]['total_mes']}")
             else: 
-                print(f"\nEn {meses_del_anio[mes]} del {anio} no hubo ingresos")
-        print(f"\n\nLas ventas promedio mensuales del {anio} fueron: {(venta_anual/12):.2f}")
+                print(f"- En {meses_del_anio[mes]} del {anio} no hubo ingresos")
+        print(f"\n -Las ventas promedio mensuales del {anio} fueron: {(venta_anual/12):.2f}")
         meses_con_mas_ventas = sorted(totales[anio]['meses'].items(), key = lambda x:x[1]['cuenta_mes'], reverse = True)
-        print("\n\nMESES CON MAYORES VENTAS")
+        print("\n*MESES CON MAYORES VENTAS")
         for mes in meses_con_mas_ventas[0:4]:
-            print(f"El mes {meses_del_anio[mes[0]]} tuvo {mes[1]['cuenta_mes']} ventas")
+            if mes[1]['cuenta_mes'] != 0:
+                print(f"- El mes {meses_del_anio[mes[0]]} tuvo {mes[1]['cuenta_mes']} ventas")
+            else:
+                print(f"- Este año no hubo ventas")    
+
+  
      
 
 #[1, 1, 5, '24/07/2020', 0],
