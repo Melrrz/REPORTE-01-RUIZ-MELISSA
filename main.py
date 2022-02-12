@@ -63,7 +63,8 @@ def get_menos_ventas_y_busquedas_por_categorias(categorias, lifestore_sales):
     '''
     prod_vendidos_por_categorias = {}
     for category in categorias:
-        prod_vendidos_por_categorias[category] = {'prod_id':[], 'ventas':[], 'ordenados_ventas':[], 'busquedas':[], 'ordenados_busquedas':[]}
+        prod_vendidos_por_categorias[category] = {'prod_id':[], 'ventas':[], 'ordenados_ventas':[], 
+        'busquedas':[], 'ordenados_busquedas':[]}
         contador_ventas = {}
         contador_busquedas = {}
         for prod_id in categorias[category]:
@@ -227,7 +228,7 @@ def print_reports():
                 print(f"- El ingreso total en {meses_del_anio[mes]} del {anio} fue: ${totales[anio]['meses'][mes]['total_mes']}")
             else: 
                 print(f"- En {meses_del_anio[mes]} del {anio} no hubo ingresos")
-        print(f"\n -Las ventas promedio mensuales del {anio} fueron: {(venta_anual/12):.2f}")
+        print(f"\n -Los ingresos promedio mensuales del {anio} fueron: {(venta_anual/12):.2f}")
         meses_con_mas_ventas = sorted(totales[anio]['meses'].items(), key = lambda x:x[1]['cuenta_mes'], reverse = True)
         print("\n*MESES CON MAYORES VENTAS")
         for mes in meses_con_mas_ventas[0:4]:
